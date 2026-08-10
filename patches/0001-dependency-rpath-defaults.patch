@@ -1,0 +1,14 @@
+diff --git a/cmake/macros/rv_create_std_deps_vars.cmake b/cmake/macros/rv_create_std_deps_vars.cmake
+index 4e49f95..bdaa5ba 100644
+--- a/cmake/macros/rv_create_std_deps_vars.cmake
++++ b/cmake/macros/rv_create_std_deps_vars.cmake
+@@ -132,6 +132,9 @@ MACRO(RV_CREATE_STANDARD_DEPS_VARIABLES target_name version make_command configu
+   LIST(APPEND _configure_options "-DCMAKE_INSTALL_PREFIX=${_install_dir}")
+   LIST(APPEND _configure_options "-DCMAKE_OSX_ARCHITECTURES=${CMAKE_OSX_ARCHITECTURES}")
+   LIST(APPEND _configure_options "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}")
++  LIST(APPEND _configure_options "-DCMAKE_MACOSX_RPATH=ON")
++  LIST(APPEND _configure_options "-DCMAKE_BUILD_WITH_INSTALL_RPATH=OFF")
++  LIST(APPEND _configure_options "-DCMAKE_INSTALL_RPATH=")
+   LIST(APPEND _configure_options "-S ${_source_dir}")
+   LIST(APPEND _configure_options "-B ${_build_dir}")
+ 

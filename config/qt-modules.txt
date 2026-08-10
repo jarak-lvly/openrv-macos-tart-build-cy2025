@@ -1,0 +1,13 @@
+qtquick3d
+qtshadertools
+qtcharts
+qtdatavis3d
+qtimageformats
+qtmultimedia
+qtnetworkauth
+qtpositioning
+qtvirtualkeyboard
+qtwebchannel
+qtwebengine
+qtwebsockets
+qtquicktimeline

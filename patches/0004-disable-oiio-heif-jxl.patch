@@ -1,0 +1,13 @@
+diff --git a/cmake/dependencies/oiio.cmake b/cmake/dependencies/oiio.cmake
+index 8432bdc..5ceb143 100644
+--- a/cmake/dependencies/oiio.cmake
++++ b/cmake/dependencies/oiio.cmake
+@@ -189,6 +189,8 @@ ENDIF()
+ LIST(APPEND _configure_options "-DTIFF_ROOT=${RV_DEPS_TIFF_ROOT_DIR}")
+ 
+ LIST(APPEND _configure_options "-DUSE_FFMPEG=0")
++LIST(APPEND _configure_options "-DUSE_HEIF=OFF")
++LIST(APPEND _configure_options "-DUSE_JXL=OFF")
+ 
+ # When deps are built from source but others come from a shared prefix (e.g. Homebrew), CMake IMPORTED targets from Homebrew packages (libjpeg-turbo,
+ # libdeflate, fmt) add /opt/homebrew/include as -isystem to OIIO's compile BEFORE our RV_DEPS_OPENEXR/RV_DEPS_IMATH -isystem paths. Per GCC, when the same path

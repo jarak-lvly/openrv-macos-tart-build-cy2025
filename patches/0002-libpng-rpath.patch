@@ -1,0 +1,12 @@
+diff --git a/cmake/dependencies/build/png.cmake b/cmake/dependencies/build/png.cmake
+index 7feb8ca..a6e4a5f 100644
+--- a/cmake/dependencies/build/png.cmake
++++ b/cmake/dependencies/build/png.cmake
+@@ -13,6 +13,7 @@ LIST(APPEND _configure_options "-DPNG_FRAMEWORK=OFF")
+ 
+ # Disable PNG's automatic rpath setup to avoid conflicts with RV's rpath management
+ LIST(APPEND _configure_options "-DCMAKE_INSTALL_RPATH=")
++LIST(APPEND _configure_options "-DCMAKE_MACOSX_RPATH=OFF")
+ 
+ EXTERNALPROJECT_ADD(
+   ${_target}

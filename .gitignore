@@ -1,0 +1,4 @@
+logs/*.log
+output/*
+!output/.gitkeep
+.DS_Store

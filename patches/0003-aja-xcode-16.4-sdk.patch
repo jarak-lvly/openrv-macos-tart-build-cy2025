@@ -1,0 +1,12 @@
+diff --git a/cmake/dependencies/aja.cmake b/cmake/dependencies/aja.cmake
+index b47ebb6..f2661e4 100644
+--- a/cmake/dependencies/aja.cmake
++++ b/cmake/dependencies/aja.cmake
+@@ -58,6 +58,7 @@ LIST(
+   "-DAJANTV2_DISABLE_PLUGIN_LOAD=ON"
+   "-DAJANTV2_DISABLE_DRIVER=ON"
+   "-DNTV2_VERSION_BUILD=0"
++  "-DCMAKE_OSX_SYSROOT=@OPENRV_MACOS_SDKROOT@"
+ )
+ 
+ # In Debug, the MSVC runtime library needs to be set to MultiThreadedDebug. Otherwise, it will be set to MultiThreaded.
