@@ -53,17 +53,21 @@ on August 10, 2026 produced the following wall-clock times:
 
 | Stage | Observed time |
 | --- | ---: |
-| Provision build environment | ~4m 27s* |
+| Provision build environment | ~4m 27s |
 | Build OpenRV | ~33m 42s |
 | Package OpenRV | ~5m 41s |
 
+**Provisioning note:** The Xcode 16.4 `.xip` had already been downloaded before
+this validation run. The provisioning time therefore excludes the Xcode
+download. Download time will vary with network performance.
+
+**Build note:** The OpenRV build was performed with an empty ccache
+(`0.0 / 5.0 GiB`), so the ~33m 42s measurement represents a cold build rather
+than a rebuild benefiting from cached compilation.
+
 These are observed times from the validated configuration, not performance
-guarantees. Build time will vary with host hardware, Tart resource allocation,
-network performance, dependency caching, and ccache state.
-
-* The Xcode 16.4 .xip had already been downloaded before this validation run. The provisioning time therefore excludes the Xcode download. Download time varies substantially with network performance and is not included in these measurements.
-
-The OpenRV build was performed with an empty ccache (0.0 / 5.0 GiB) and therefore represents a cold build rather than a rebuild benefiting from cached compilation.
+guarantees. Times will vary with host hardware, Tart resource allocation,
+network performance, and caching.
 
 
 ### Guest resources
