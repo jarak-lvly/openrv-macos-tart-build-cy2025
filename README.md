@@ -46,6 +46,27 @@ The registry tag `latest` is intentionally the upstream moving tag. It may resol
 | VFX Reference Platform | CY2025 | Validated build configuration |
 
 
+### Observed build times
+
+On the tested Tart guest (4 vCPUs, 8 GB RAM), the successful validation run
+on August 10, 2026 produced the following wall-clock times:
+
+| Stage | Observed time |
+| --- | ---: |
+| Provision build environment | ~4m 27s |
+| Build OpenRV | ~33m 42s |
+| Package OpenRV | ~5m 41s |
+| Total | ~43m 50s |
+
+These are observed times from the validated configuration, not performance
+guarantees. Build time will vary with host hardware, Tart resource allocation,
+network performance, dependency caching, and ccache state.
+
+The build measurement was taken with an empty ccache at the end of
+provisioning (`0.0 / 5.0 GiB`), so it represents a cold OpenRV build rather
+than a rebuild benefiting from cached compilation.
+
+
 ### Guest resources
 
 The validated Tart build guest used 4 vCPUs, 8 GB of memory, and a 140 GB virtual disk. Inside macOS, the root APFS filesystem reported a 130 GiB size. These values describe the tested configuration rather than hard minimum requirements. The automation enforces free-disk-space checks because disk exhaustion is a predictable build failure; it does not enforce CPU or RAM values. Use `tart get <vm-name>` on the host to confirm the allocation for a build VM before starting.
