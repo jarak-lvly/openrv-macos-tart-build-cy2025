@@ -479,6 +479,29 @@ Common failure points to check first:
 - **Packaging reports Homebrew/build-tree paths:** treat this as a relocation failure rather than bypassing the check. Inspect `logs/package-openrv.log` for the exact Mach-O consumer.
 - **`codesign` or clean-Mac launch failure:** remember that the package is ad-hoc signed, not notarized. First distinguish a loader/dependency problem from Gatekeeper policy by launching from Terminal and reviewing the reported error.
 
+## Why no binaries
+
+This project intentionally does not provide:
+
+- OpenRV executables
+- Qt binaries
+- FFmpeg binaries
+- Xcode
+- other third-party dependencies
+
+Xcode must be obtained directly from Apple and is not included or redistributed
+by this repository.
+
+The intent is to document a reproducible build process rather than redistribute
+software owned by other projects.
+
+## Limitations
+
+- GUI validation must still be performed on macOS with graphics.
+- The generated application is ad-hoc signed; it is not Developer ID signed or Apple-notarized.
+- This is not an officially supported OpenRV build environment.
+- Some dependencies may change over time as OpenRV evolves.
+- The upstream Tart base image uses the moving `latest` tag, so its bundled macOS and Xcode versions may change over time.
 
 ## License
 
