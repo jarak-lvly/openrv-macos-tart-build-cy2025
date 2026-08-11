@@ -100,21 +100,27 @@ scp ~/Downloads/Xcode_16.4.xip admin@<tart-vm-ip>:~/Downloads/
 
 ## Repository contents
 
-```text
-config/
-  versions.env                 Validated versions and build settings
-  qt-modules.txt               Exact Qt module list
-LICENSE                          MIT license for this repository
-patches/
-  0001-...patch                Four validated OpenRV source patches
-scripts/
-  provision-openrv-build-env.sh
-  apply-openrv-patches.sh
-  build-openrv.sh
-  package-openrv.sh
-  lib/common.sh
-logs/                           Automation logs
-output/                         Copies of final artifacts
+```
+openrv-macos-tart-build-cy2025/
+├── config/
+│   ├── qt-modules.txt               Exact Qt module list
+│   └── versions.env                 Validated versions and build settings
+├── LICENSE                          MIT license for this repository
+├── logs/                            Automation logs
+├── output/                          Copies of final artifacts
+├── patches/                         Four validated OpenRV source patches
+│   ├── 0001-dependency-rpath-defaults.patch
+│   ├── 0002-libpng-rpath.patch
+│   ├── 0003-aja-xcode-16.4-sdk.patch
+│   └── 0004-disable-oiio-heif-jxl.patch
+├── README.md
+└── scripts/
+    ├── apply-openrv-patches.sh
+    ├── build-openrv.sh
+    ├── lib/
+    │   └── common.sh
+    ├── package-openrv.sh
+    └── provision-openrv-build-env.sh
 ```
 
 ## 1. Provision the guest build environment
@@ -139,45 +145,48 @@ The script:
 
 Provisioning intentionally modifies the disposable Tart guest: it installs Homebrew formulae, writes CMake and Xcode under `/Applications`, changes the guest's system-wide selected Xcode with `xcode-select`, accepts/initializes that Xcode installation, and writes `~/openrv_env.sh`. These changes are expected inside the dedicated build VM and are one reason a disposable Tart clone is recommended. The script validates sudo access near startup so privilege problems fail before lengthy downloads or build work begin.
 
-## After provisioning
+## Workflow
 
-When `provision-openrv-build-env.sh` completes successfully, the OpenRV build
-environment is ready.
+The automation follows the same overall split as the upstream OpenRV documentation:
+prepare the macOS build environment first, then build OpenRV.
 
-The script prints a reminder similar to:
+- Preparing Open RV on macOS: https://aswf-openrv.readthedocs.io/en/latest/build_system/config_macos.html
+- Building Open RV: https://aswf-openrv.readthedocs.io/en/latest/build_system/config_common_build.html
+
 
 ```text
-Provisioning completed successfully.
-
-For manual OpenRV builds:
-
-  source ~/openrv_env.sh
-
-Then clone OpenRV with its submodules, for example:
-
-  cd ~
-  git clone --recursive \
-    --branch v4.0.1 \
-    https://github.com/AcademySoftwareFoundation/OpenRV.git
-
-  cd OpenRV
-  source rvcmds.sh
-
-Select the desired VFX Platform, run rvcfg with your preferred options,
-and then run rvbootstrap.
-
-To reproduce the validated OpenRV 4.0.1 / CY2025 build instead, run:
-
-  ./scripts/build-openrv.sh
+Cirrus Labs Tart guest
+        |
+        v
+./scripts/provision-openrv-build-env.sh
+        |
+        |  Xcode 16.4
+        |  CMake 3.31.7
+        |  Qt 6.5.3
+        |  build dependencies
+        |  ~/openrv_env.sh
+        v
+Provisioned build environment
+        |
+        +------------------------------+
+        |                              |
+        v                              v
+./scripts/build-openrv.sh       Manual OpenRV workflow
+        |                       (collapsed below)
+        v
+OpenRV 4.0.1 / CY2025
+staged application
+        |
+        v
+./scripts/package-openrv.sh
+        |
+        v
+output/OpenRV-4.0.1-macos-arm64.zip
 ```
 
-The provisioning script prepares the validated build environment only. From
-that point, you may either:
-
-- build OpenRV manually using the standard OpenRV workflow, or
-- run `build-openrv.sh` to reproduce the validated OpenRV 4.0.1 / CY2025 build.
-
-The user may select another supported VFX Platform year or provide different `rvcfg` options. Those builds are outside the exact validated CY2025 configuration.
+The automated path is the validated workflow for this proof of concept. The manual
+workflow remains available for troubleshooting, experimentation, or changing
+OpenRV configuration.
 
 ## 2. Build OpenRV
 
@@ -185,10 +194,27 @@ At this point, the validated build environment is ready.
 
 Choose one of the following workflows.
 
+<details>
+<summary><strong>Option A — Manual OpenRV build</strong></summary>
+
 ### Option A — Manual OpenRV build
 
 Use the standard OpenRV build process. On macOS, start a Bash shell first so
 OpenRV's `rvcmds.sh` runs in the same shell family used by the automation:
+
+Provisioning creates `~/openrv_env.sh`. For the validated configuration, the
+generated file is:
+
+```bash
+export DEVELOPER_DIR="/Applications/Xcode_16.4.app/Contents/Developer"
+export SDKROOT="/Applications/Xcode_16.4.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.5.sdk"
+export QT_HOME="$HOME/Qt/6.5.3/macos"
+export CMAKE_PREFIX_PATH="$QT_HOME${CMAKE_PREFIX_PATH:+:$CMAKE_PREFIX_PATH}"
+export PATH="/Applications/CMake.app/Contents/bin:$QT_HOME/bin:$PATH"
+unset CC CXX CPP CXXCPP CFLAGS CXXFLAGS
+```
+
+Source this file before configuring or building OpenRV manually:
 
 ```bash
 bash
@@ -205,6 +231,11 @@ cd OpenRV
   --source "$HOME/OpenRV"
 
 source rvcmds.sh
+
+# Select CY2025 when prompted by rvcmds.sh, then use the validated rvcfg options.
+rvcfg -DRV_FFMPEG_NON_FREE_DECODERS_TO_ENABLE="prores;hevc;aac;aac_at;aac_fixed;aac_latm;dnxhd"
+
+rvbootstrap
 ```
 
 The patch helper checks each patch before making changes. Missing patches are
@@ -219,16 +250,12 @@ changes stop the script. To check without modifying the checkout, use:
 `--dry-run` is an alias for `--check`. Check mode never modifies the source tree
 and tells you to rerun without `--check` when patches are missing.
 
-Select the desired VFX Reference Platform when prompted, run `rvcfg` with
-your preferred configuration options, and then run:
+The command above shows the validated CY2025 decoder configuration used by
+`build-openrv.sh`. For a different manual build, select another supported VFX
+Platform or change the `rvcfg` options intentionally; those builds are outside
+the exact validated configuration.
 
-```bash
-rvbootstrap
-```
-
-The provisioning script prepares the validated build environment only. It does
-not restrict which OpenRV version, VFX Platform year, or `rvcfg` options you
-choose.
+</details>
 
 ### Option B — Reproduce the validated OpenRV 4.0.1 / CY2025 build
 
@@ -320,6 +347,9 @@ Builds OpenImageIO with HEIF and JPEG XL support disabled. During validation, th
 
 `package-openrv.sh` treats this as a hard requirement: it verifies that `USE_HEIF` and `USE_JXL` are both `OFF` and fails rather than packaging an application built with those dependencies enabled.
 
+<details>
+<summary><strong>Applying or checking the patches manually</strong></summary>
+
 ### Applying or checking the patches manually
 
 Use the repository helper rather than applying the patch files individually:
@@ -345,6 +375,8 @@ To inspect patch status without modifying the OpenRV source tree:
 If the check reports `NEEDS APPLY`, rerun the command without `--check` or `--dry-run` to apply the missing patches.
 
 The automated `build-openrv.sh` workflow performs the patch step automatically. The commands above are primarily useful when following the manual build workflow or when validating an existing OpenRV checkout.
+
+</details>
 
 ## 3. Install, relocate, sign, and package
 
@@ -382,6 +414,9 @@ Final files are written under the OpenRV checkout's `_install` directory and cop
 
 In the validated August 2026 test, the optimized packaging stage completed in approximately 5 minutes 41 seconds on the Tart build VM.
 
+<details>
+<summary><strong>Using the packaging script with manual builds</strong></summary>
+
 ## Using the packaging script with manual builds
 
 The packaging script can be used after a manual build of the same validated OpenRV v4.0.1 / CY2025 source/configuration. It is not intended as a generic packager for arbitrary OpenRV versions or VFX Platform years.
@@ -394,9 +429,9 @@ source ~/openrv_env.sh
 cd ~/OpenRV
 source rvcmds.sh
 
-# Use CY2025 and your intended rvcfg options while retaining the validated
-# source patches and required OIIO HEIF/JXL settings.
-rvcfg -D...
+# Select CY2025 when prompted by rvcmds.sh, then use the validated rvcfg options.
+rvcfg -DRV_FFMPEG_NON_FREE_DECODERS_TO_ENABLE="prores;hevc;aac;aac_at;aac_fixed;aac_latm;dnxhd"
+
 rvbootstrap
 
 /path/to/openrv-macos-tart-build-cy2025/scripts/package-openrv.sh \
@@ -404,6 +439,8 @@ rvbootstrap
 ```
 
 The packaging script verifies that the checkout is the expected OpenRV repository/tag and that the configured build is CY2025 before creating the validated package name. It is intentionally strict and also stops if it detects unhandled Homebrew dependencies, HEIF/JPEG XL OIIO dependencies, build-machine paths, invalid signatures, or missing expected build products.
+
+</details>
 
 ## Logs
 
