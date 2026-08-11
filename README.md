@@ -154,7 +154,7 @@ prepare the macOS build environment first, then build OpenRV.
 - Building Open RV: https://aswf-openrv.readthedocs.io/en/latest/build_system/config_common_build.html
 
 
-```text
+```
 Cirrus Labs Tart guest
         |
         v
@@ -446,7 +446,7 @@ The packaging script verifies that the checkout is the expected OpenRV repositor
 
 Each top-level script writes a separate log under `logs/`:
 
-```text
+```
 logs/provision.log
 logs/build-openrv.log
 logs/package-openrv.log
@@ -479,6 +479,7 @@ Common failure points to check first:
 - **Packaging reports Homebrew/build-tree paths:** treat this as a relocation failure rather than bypassing the check. Inspect `logs/package-openrv.log` for the exact Mach-O consumer.
 - **`codesign` or clean-Mac launch failure:** remember that the package is ad-hoc signed, not notarized. First distinguish a loader/dependency problem from Gatekeeper policy by launching from Terminal and reviewing the reported error.
 
+
 ## Why no binaries
 
 This project intentionally does not provide:
@@ -495,6 +496,7 @@ by this repository.
 The intent is to document a reproducible build process rather than redistribute
 software owned by other projects.
 
+
 ## Limitations
 
 - GUI validation must still be performed on macOS with graphics.
@@ -502,6 +504,18 @@ software owned by other projects.
 - This is not an officially supported OpenRV build environment.
 - Some dependencies may change over time as OpenRV evolves.
 - The upstream Tart base image uses the moving `latest` tag, so its bundled macOS and Xcode versions may change over time.
+
+
+## References
+
+- https://tart.run/quick-start/
+
+- https://github.com/AcademySoftwareFoundation/OpenRV
+
+- https://aswf-openrv.readthedocs.io/en/latest/build_system/config_common_build.html
+
+- https://developer.apple.com/download/all/?q=xcode%2016.4 (sign in with your Apple ID)
+
 
 ## License
 
