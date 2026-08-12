@@ -14,17 +14,23 @@ The repository also includes `package-openrv.sh`, which preserves the install/re
 
 The physical host should already have Homebrew and Tart installed. This repository does not document their installation or general Tart administration. The validated Cirrus Labs guest also provided Homebrew inside the VM; `provision-openrv-build-env.sh` preflights `brew` and stops if it is not available in the guest.
 
-The validated guest was created from the Cirrus Labs macOS Tahoe Xcode image:
+The validated guest can be created from the Cirrus Labs macOS Tahoe base image:
 
 ```bash
-tart pull ghcr.io/cirruslabs/macos-tahoe-xcode:latest
+tart pull ghcr.io/cirruslabs/macos-tahoe-base:latest
 ```
 
 Use that image as the clean base for a disposable build VM, then run the scripts in this repository inside the guest. For example, an operator may clone the pulled image to a local working VM before making changes.
 
-The Cirrus Labs base image already contains an Xcode installation, but that bundled Xcode is **not** the validated OpenRV compiler for this repository. The provisioning workflow installs the user-supplied Xcode 16.4 archive separately as `/Applications/Xcode_16.4.app`, selects it with `xcode-select`, initializes it, and verifies build `16F6` plus the macOS 15.5 SDK. The Xcode included in a newer `latest` base image may therefore differ without changing the intended OpenRV toolchain; the separately installed Xcode 16.4 remains the build target.
+The base image uses a 50 GB virtual disk by default. Resize the working VM to 150 GB before provisioning so there is sufficient space for Xcode, Qt, the OpenRV source/dependencies, the build tree, and packaging output. For example:
 
-The registry tag `latest` is intentionally the upstream moving tag. It may resolve to a newer macOS/Xcode base in the future. The exact guest OS and toolchain versions successfully tested for this proof of concept are listed below; the provisioning script warns when the guest macOS version/build differs from the validated values.
+```bash
+tart set <vm-name> --disk-size 150
+```
+
+The base image does not need to provide the OpenRV compiler toolchain. The provisioning workflow installs the user-supplied Xcode 16.4 archive as `/Applications/Xcode_16.4.app`, selects it with `xcode-select`, initializes it, and verifies build `16F6` plus the macOS 15.5 SDK. A clean validation run from `macos-tahoe-base:latest` completed provisioning, the OpenRV build, and packaging successfully without relying on the Xcode image.
+
+The registry tag `latest` is intentionally the upstream moving tag. It may resolve to a newer macOS base in the future. The exact guest OS and toolchain versions successfully tested for this proof of concept are listed below; the provisioning script warns when the guest macOS version/build differs from the validated values.
 
 ## Tested configuration
 
@@ -32,12 +38,11 @@ The registry tag `latest` is intentionally the upstream moving tag. It may resol
 | --- | --- | --- |
 | Physical host | Apple Silicon iMac | Tart host |
 | Tart | 2.32.1 | Installed on the physical Mac |
-| Tart base image | `ghcr.io/cirruslabs/macos-tahoe-xcode:latest` | Upstream moving tag used to create the test guest |
+| Tart base image | `ghcr.io/cirruslabs/macos-tahoe-base:latest` | Upstream moving tag validated without a preinstalled Xcode toolchain |
 | Guest macOS | Tahoe 26.4, build 25E246 | Exact validated guest |
 | Guest architecture | arm64 | Required by the automation |
-| Guest disk | 140 GB Tart virtual disk; 130 GiB APFS filesystem | Validation VM; provisioning requires at least 40 GiB free |
+| Guest disk | 150 GB Tart virtual disk; 139 GiB APFS filesystem | Base image defaults to 50 GB; resize the working VM before provisioning; provisioning requires at least 40 GiB free |
 | Guest CPU / RAM | 4 vCPUs / 8 GB RAM | Actual validated Tart guest allocation; the automation does not enforce CPU/RAM |
-| Xcode in base image | May vary with `latest` | Not used as the validated OpenRV compiler |
 | Xcode | 16.4, build 16F6 | Installed side-by-side by this repository from the user-supplied XIP and selected for the build |
 | macOS SDK | 15.5 | From Xcode 16.4 |
 | CMake | 3.31.7 | Installed by the provisioning script |
@@ -48,21 +53,21 @@ The registry tag `latest` is intentionally the upstream moving tag. It may resol
 
 ### Observed build times
 
-On the tested Tart guest (4 vCPUs, 8 GB RAM), the successful validation run
-on August 10, 2026 produced the following wall-clock times:
+On the tested Tart guest (4 vCPUs, 8 GB RAM), the successful clean validation run
+from `macos-tahoe-base:latest` on August 11, 2026 produced the following wall-clock times:
 
 | Stage | Observed time |
 | --- | ---: |
-| Provision build environment | ~4m 27s |
-| Build OpenRV | ~33m 42s |
-| Package OpenRV | ~5m 41s |
+| Provision build environment | ~4m 23s |
+| Build OpenRV | ~33m 49s |
+| Package OpenRV | ~5m 49s |
 
 **Provisioning note:** The Xcode 16.4 `.xip` had already been downloaded before
 this validation run. The provisioning time therefore excludes the Xcode
 download. Download time will vary with network performance.
 
 **Build note:** The OpenRV build was performed with an empty ccache
-(`0.0 / 5.0 GiB`), so the ~33m 42s measurement represents a cold build rather
+(`0.0 / 5.0 GiB`), so the ~33m 49s measurement represents a cold build rather
 than a rebuild benefiting from cached compilation.
 
 These are observed times from the validated configuration, not performance
@@ -72,7 +77,7 @@ network performance, and caching.
 
 ### Guest resources
 
-The validated Tart build guest used 4 vCPUs, 8 GB of memory, and a 140 GB virtual disk. Inside macOS, the root APFS filesystem reported a 130 GiB size. These values describe the tested configuration rather than hard minimum requirements. The automation enforces free-disk-space checks because disk exhaustion is a predictable build failure; it does not enforce CPU or RAM values. Use `tart get <vm-name>` on the host to confirm the allocation for a build VM before starting.
+The validated Tart build guest used 4 vCPUs, 8 GB of memory, and a 150 GB virtual disk. Inside macOS, the root APFS filesystem reported a 139 GiB size. These values describe the tested configuration rather than hard minimum requirements. The automation enforces free-disk-space checks because disk exhaustion is a predictable build failure; it does not enforce CPU or RAM values. Use `tart get <vm-name>` on the host to confirm the allocation for a build VM before starting.
 
 The scripts intentionally fix the versions that were important to the validated OpenRV build, such as Xcode, CMake, Qt, OpenRV, and the VFX Platform. Homebrew formulae installed as build prerequisites are not frozen to historical formula revisions; Homebrew may therefore supply newer compatible package revisions when the environment is rebuilt later. This repository is intended to reproduce the validated build procedure, not to provide a bit-for-bit hermetic build environment.
 
@@ -412,7 +417,7 @@ The packaging script performs the validated post-build sequence:
 
 Final files are written under the OpenRV checkout's `_install` directory and copied to this repository's `output/` directory.
 
-In the validated August 2026 test, the optimized packaging stage completed in approximately 5 minutes 41 seconds on the Tart build VM.
+In the clean `macos-tahoe-base:latest` validation run, the optimized packaging stage completed in approximately 5 minutes 49 seconds on the Tart build VM.
 
 <details>
 <summary><strong>Using the packaging script with manual builds</strong></summary>
@@ -467,6 +472,7 @@ The automation is designed to stop rather than continue past an unexpected build
 Common failure points to check first:
 
 - **`brew` or another base command is missing:** confirm that you started from the expected Tart/Cirrus Labs environment and that Homebrew/Tart prerequisites were prepared as described above.
+- **Base VM disk is still 50 GB:** resize the working VM to 150 GB before provisioning; the Cirrus Labs Tahoe base image defaults to a 50 GB virtual disk.
 - **`sudo -v` fails:** use an administrator account inside the guest. Provisioning intentionally stops before installing anything that requires elevated privileges.
 - **`xip` is missing:** the guest is missing the macOS archive utility required to expand `Xcode_16.4.xip`; provisioning preflights this command before doing build-environment work.
 - **CMake checksum failure:** do not bypass the check. Confirm that `CMAKE_URL`, `CMAKE_DMG`, and `CMAKE_SHA256` in `config/versions.env` describe the same intended CMake release and that the downloaded file is complete.
@@ -503,7 +509,7 @@ software owned by other projects.
 - The generated application is ad-hoc signed; it is not Developer ID signed or Apple-notarized.
 - This is not an officially supported OpenRV build environment.
 - Some dependencies may change over time as OpenRV evolves.
-- The upstream Tart base image uses the moving `latest` tag, so its bundled macOS and Xcode versions may change over time.
+- The upstream Tart base image uses the moving `latest` tag, so its bundled macOS version may change over time.
 
 
 ## References
@@ -520,3 +526,4 @@ software owned by other projects.
 ## License
 
 The automation and documentation in this repository are provided under the MIT License. See `LICENSE`. OpenRV and the third-party software downloaded or built by these scripts retain their own upstream licenses; this repository's MIT license does not replace those licenses.
+
