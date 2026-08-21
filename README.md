@@ -39,7 +39,7 @@ The registry tag `latest` is intentionally the upstream moving tag. It may resol
 | Physical host | Apple Silicon iMac | Tart host |
 | Tart | 2.32.1 | Installed on the physical Mac |
 | Tart base image | `ghcr.io/cirruslabs/macos-tahoe-base:latest` | Upstream moving tag validated without a preinstalled Xcode toolchain |
-| Guest macOS | Tahoe 26.4, build 25E246 | Exact validated guest |
+| Guest macOS | Tahoe 26.4/26.6.1, build 25E246/25G76  | Exact validated guest |
 | Guest architecture | arm64 | Required by the automation |
 | Guest disk | 150 GB Tart virtual disk; 139 GiB APFS filesystem | Base image defaults to 50 GB; resize the working VM before provisioning; provisioning requires at least 40 GiB free |
 | Guest CPU / RAM | 4 vCPUs / 8 GB RAM | Actual validated Tart guest allocation; the automation does not enforce CPU/RAM |
