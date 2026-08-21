@@ -47,7 +47,7 @@ The registry tag `latest` is intentionally the upstream moving tag. It may resol
 | macOS SDK | 15.5 | From Xcode 16.4 |
 | CMake | 3.31.7 | Installed by the provisioning script |
 | Qt | 6.5.3 | Installed with `aqtinstall` 3.3.0 |
-| OpenRV | v4.0.1 | Validated source tag |
+| OpenRV | v4.0.1 and v4.0.2 | Validated source tag |
 | VFX Reference Platform | CY2025 | Validated build configuration |
 
 
